@@ -1,0 +1,206 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "0bdb9781-a647-4be4-9e70-090cabc17f3e",
+   "metadata": {},
+   "source": [
+    "# Effetti della resistenza interna del voltmetro"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "afa29aa5-d1ec-42bd-ad63-75f103ee7123",
+   "metadata": {},
+   "source": [
+    "## Cosa fa questo notebook?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "57abc64a-b4b9-4785-982c-6449ab6a8469",
+   "metadata": {},
+   "source": [
+    "Data una data intensità di corrente $I$ che scorre in un ramo resistivo di resistenza $R$, la d.d.p. $V$ ai capi del ramo è:\n",
+    "\n",
+    "$V = R I$.\n",
+    "\n",
+    "Quando la d.d.p. viene letta da un voltmetro **reale**, la resistenza interna $R$ viene a trovarsi in parallelo con $r_V$.\n",
+    "Di conseguenza, la lettura della d.d.p. viene perturbata e il suo valore risulta\n",
+    "\n",
+    "$V_{pert} = R_{//} I$, \n",
+    "\n",
+    "con\n",
+    "\n",
+    "$R_{//} = \\frac{R r_V}{R+r_V}$.\n",
+    "\n",
+    "Nel notebook, dati i valori di $R$, $I$, e $r_V$ (scelta da un menu a tendina con opzioni *tipiche*), vengono calcolati a scopo di confronto i valori di $V$ e $V_{pert}$.\n",
+    "\n",
+    "Tutto il discorso è riportato nella Sez. 2.2.2 delle dispen$\\zeta$e e dare un'occhiata al notebook potrebbe essere di qualche vostro interesse!"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "ca3205ce-fdea-4b62-965e-6a1275174e7d",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "c47af6da21344fb0a7319e44620b55d8",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Dropdown(description='$r_V$', options=(('10 Mohm', 10000000.0), ('200 kohm', 200000.0), ('1 Mohm', 1000000.0),…"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "76935577a99b42389a362d48226ab3b7",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Text(value='', description='$R$ (in ohm):', placeholder='Resistenza del ramo (in ohm):')"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "b398d98215494771bc8c0997fc48880b",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Text(value='', description='$I$ (in mA):', placeholder='Intensità di corrente nel ramo (in mA):')"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "3e569160ad47455a9291f2f93b45a065",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Button(button_style='success', description='Calcola', icon='check', style=ButtonStyle(), tooltip='Clicca per c…"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "7424770810cd47829e9f34542fdebdb5",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Output(layout=Layout(border_bottom='1px solid red', border_left='1px solid red', border_right='1px solid red',…"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "import ipywidgets as widgets\n",
+    "from IPython.display import display, clear_output\n",
+    "\n",
+    "# Creazione di un menu a tendina con valori prefissati della resistenza interna del voltmetro\n",
+    "menu = widgets.Dropdown(\n",
+    "    options=[('10 Mohm',1e7), ('200 kohm',2e5), ('1 Mohm', 1e6), ('50 ohm',50)],\n",
+    "    value=1e7, # Valore iniziale predefinito\n",
+    "    description='$r_V$',\n",
+    "    disabled=False,\n",
+    ")\n",
+    "\n",
+    "# Creazione delle caselle di testo per l'input di intensità di corrente e resistenza del ramo\n",
+    "casella_input_1 = widgets.Text(\n",
+    "    value='',\n",
+    "    placeholder='Resistenza del ramo (in ohm):',\n",
+    "    description='$R$ (in ohm):',\n",
+    "    disabled=False\n",
+    ")\n",
+    "\n",
+    "casella_input_2 = widgets.Text(\n",
+    "    value='',\n",
+    "    placeholder='Intensità di corrente nel ramo (in mA):',\n",
+    "    description='$I$ (in mA):',\n",
+    "    disabled=False\n",
+    ")\n",
+    "\n",
+    "# Creazione del pulsante di invio\n",
+    "pulsante = widgets.Button(\n",
+    "    description='Calcola',\n",
+    "    button_style='success', # Verde\n",
+    "    tooltip='Clicca per confermare',\n",
+    "    icon='check'\n",
+    ")\n",
+    "\n",
+    "# Definizione area di output per mostrare il risultato\n",
+    "area_output = widgets.Output(layout={'border': '1px solid red'})\n",
+    "\n",
+    "# Funzione che gestisce l'evento del click sul pulsante (fa anche i calcolini)\n",
+    "def click(b): \n",
+    "    with area_output: # Questa istruzione è specifica per ipywidgets\n",
+    "        clear_output() # Pulisce i messaggi precedenti\n",
+    "        R = float(casella_input_1.value) # Prende il valore di R\n",
+    "        I = float(casella_input_2.value) # quello di I\n",
+    "        r_V=float(menu.value) # quello di r_V\n",
+    "        V_imperturbato=R*I*1e-3 # e fa i calcolini\n",
+    "        V_perturbato=((R*r_V)/(R+r_V))*I*1e-3        \n",
+    "        print(f'Se il voltmetro non perturbasse il circuito, la lettura sarebbe: {V_imperturbato:.2e} [V]')\n",
+    "        print(f'Invece con il voltmetro in uso la lettura è: {V_perturbato:.2e} [V]')\n",
+    "\n",
+    "# Collegamento della funzione al pulsante\n",
+    "pulsante.on_click(click)\n",
+    "    \n",
+    "# Stampa sul notebook dei vari elementi grafici\n",
+    "display(menu,casella_input_1, casella_input_2,pulsante,area_output)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a63bc213-155d-48e7-a1e8-37068b68f808",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.15.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
